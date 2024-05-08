@@ -6,11 +6,11 @@ namespace VideoDownloaderApi.Models;
 [Serializable]
 public sealed record FetchFormatsResponse: IQueryResponse<IResult, IError>
 {
-    [JsonPropertyName("VideoResponseResult")]
+    [JsonPropertyName("Result")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public VideoResponseResult? Result { get; set; }
 
-    [JsonPropertyName("VideoResponseError")] 
+    [JsonPropertyName("Error")] 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public VideoResponseError? Error;
 }

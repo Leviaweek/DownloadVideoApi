@@ -7,6 +7,8 @@ public interface IVideoDownload
 {
     public Regex Pattern { get; }
     public bool IsMatch(string link);
-    public Task DownloadAsync(FetchFormatsQuery fetchFormatsQuery, CancellationToken cancellationToken);
-    public Task<VideoResponseResult> FetchFormats(FetchFormatsQuery fetchFormatsQuery, CancellationToken cancellationToken);
+    public Task DownloadAsync(GetVideoQuery getVideoQuery, CancellationToken cancellationToken);
+
+    public Task<VideoResponseResult> FetchFormats(FetchFormatsQuery fetchFormatsQuery,
+        CancellationToken cancellationToken);
 }

@@ -15,17 +15,17 @@ public sealed partial class YoutubeVideoDownloader(
     private readonly string _filesPath = options.Value.CachePath;
     private const string FileNameFormat = "{0}-{1}.{2}";
 
-    public async Task DownloadAsync(FetchFormatsQuery fetchFormatsQuery, CancellationToken cancellationToken = default)
+    public async Task DownloadAsync(GetVideoQuery getVideoQuery, CancellationToken cancellationToken = default)
     {
-        if (fetchFormatsQuery.MaxHeight is null)
-            throw new ArgumentException("Incorrect argument", nameof(fetchFormatsQuery));
+        if (getVideoQuery.Quality is null)
+            throw new ArgumentException("Incorrect argument", nameof(getVideoQuery));
         var client = new YoutubeClient(httpClient);
-        var video = await client.Videos.GetAsync(fetchFormatsQuery.Link, cancellationToken);
+        var video = await client.Videos.GetAsync(getVideoQuery.Link, cancellationToken);
         var streamInfoSet = await client.Videos.Streams.GetManifestAsync(video.Id, cancellationToken);
         var streamInfo = streamInfoSet.GetMuxedStreams()
-            .FirstOrDefault(x => x.VideoQuality.MaxHeight == fetchFormatsQuery.MaxHeight);
+            .FirstOrDefault(x => x.VideoQuality.MaxHeight == getVideoQuery.Quality);
         if (streamInfo is null)
-            throw new ArgumentException("Incorrect argument", nameof(fetchFormatsQuery));
+            throw new ArgumentException("Incorrect argument", nameof(getVideoQuery));
         await client.Videos.Streams.GetAsync(streamInfo, cancellationToken);
         logger.LogInformation("Downloading video {id}:{label}.{container}", video.Id, streamInfo.VideoQuality.Label,
             streamInfo.Container.Name);
@@ -35,16 +35,19 @@ public sealed partial class YoutubeVideoDownloader(
             cancellationToken: cancellationToken);
     }
 
-    public async Task<VideoResponseResult> FetchFormats(FetchFormatsQuery fetchFormatsQuery, CancellationToken cancellationToken)
+    public async Task<VideoResponseResult> FetchFormats(FetchFormatsQuery fetchFormatsQuery,
+        CancellationToken cancellationToken)
     {
         var client = new YoutubeClient(httpClient);
         var video = await client.Videos.GetAsync(fetchFormatsQuery.Link, cancellationToken);
         var streamInfoSet = await client.Videos.Streams.GetManifestAsync(video.Id, cancellationToken);
-        var audioStreamInfo = streamInfoSet.GetAudioOnlyStreams().Where(x => x.Container.Name == Constants.AudioContainerName)
+        var audioStreamInfo = streamInfoSet.GetAudioOnlyStreams()
+            .Where(x => x.Container.Name == Constants.AudioContainerName)
             .MaxBy(x => x.Bitrate);
-        var videoStreamInfo = streamInfoSet.GetMuxedStreams().Where(x => x.Container.Name == Constants.VideoContainerName).ToArray();
+        var videoStreamInfo = streamInfoSet.GetMuxedStreams()
+            .Where(x => x.Container.Name == Constants.VideoContainerName).ToArray();
         var fileMetadatas = videoStreamInfo.Select(x =>
-                new FileMetadata(Constants.MetadatasVideoType, 
+                new FileMetadata(Constants.MetadatasVideoType,
                     AudioInfo: new AudioInfo(x.AudioCodec, x.Container.Name, x.Bitrate.BitsPerSecond),
                     VideoInfo: new VideoInfo(x.VideoQuality.Label, x.Container.Name, x.VideoQuality.MaxHeight)))
             .ToList();
@@ -58,6 +61,7 @@ public sealed partial class YoutubeVideoDownloader(
             VideoId = video.Id
         };
     }
+
     public bool IsMatch(string link) => Pattern.IsMatch(link);
 
     [GeneratedRegex(@"https?:\/\/(www.)?youtu\.?be(\.com?)?\/\w+")]

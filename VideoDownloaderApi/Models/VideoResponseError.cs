@@ -1,7 +1,4 @@
 namespace VideoDownloaderApi.Models;
 
 [Serializable]
-public sealed record VideoResponseError: IError
-{
-    public required string Message { get; set; }
-}
+public sealed record VideoResponseError(string Message): IError;

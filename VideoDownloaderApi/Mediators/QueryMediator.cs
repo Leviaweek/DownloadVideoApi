@@ -4,9 +4,13 @@ using VideoDownloaderApi.Models.Queries;
 
 namespace VideoDownloaderApi.Mediators;
 
-public sealed class QueryMediator(IEnumerable<IVideoDownload> videoDownloadServices, IEnumerable<IQueryHandler<IQuery<IQueryResponse<IResult, IError>>, IResult, IError>> queryHandlers): IQueryMediator<IQuery<IQueryResponse<IResult, IError>>, IResult, IError>
+public sealed class QueryMediator(
+    IEnumerable<IVideoDownload> videoDownloadServices,
+    IEnumerable<IQueryHandler<IQuery<IQueryResponse<IResult, IError>>, IResult, IError>> queryHandlers)
+    : IQueryMediator<IQuery<IQueryResponse<IResult, IError>>, IResult, IError>
 {
-    public async Task<IQueryResponse<IResult, IError>> HandleAsync(IQuery<IQueryResponse<IResult, IError>> query, CancellationToken cancellationToken = default)
+    public async Task<IQueryResponse<IResult, IError>> HandleAsync(IQuery<IQueryResponse<IResult, IError>> query,
+        CancellationToken cancellationToken = default)
     {
         switch (query)
         {
@@ -16,10 +20,10 @@ public sealed class QueryMediator(IEnumerable<IVideoDownload> videoDownloadServi
                     videoDownloadServices.FirstOrDefault(x => x.IsMatch(fetchFormatsQuery.Link));
                 var queryHandler = queryHandlers.OfType<FetchFormatsQueryHandler>().FirstOrDefault();
                 if (queryHandler is null)
-                    throw new NotImplementedException();
+                    throw new InvalidOperationException();
                 return await queryHandler.ReceiveAsync(fetchFormatsQuery, videoDownloader, cancellationToken);
             }
-            default: throw new NotImplementedException();
-        };
+            default: throw new InvalidOperationException();
+        }
     }
 }
