@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace VideoDownloaderApi.Models;
+namespace VideoDownloaderApi.Models.Responses;
 
 [Serializable]
 public sealed record VideoResponseResult: IResult

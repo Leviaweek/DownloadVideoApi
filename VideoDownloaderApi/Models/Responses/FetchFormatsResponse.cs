@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using VideoDownloaderApi.Abstractions;
 
-namespace VideoDownloaderApi.Models;
+namespace VideoDownloaderApi.Models.Responses;
 
 [Serializable]
 public sealed record FetchFormatsResponse: IQueryResponse<IResult, IError>

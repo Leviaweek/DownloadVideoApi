@@ -4,25 +4,17 @@ using VideoDownloaderApi.Models.Responses;
 
 namespace VideoDownloaderApi.Handlers.QueryHandlers;
 
-public sealed class FetchFormatsQueryHandler
-    : IQueryHandler<IQuery<IQueryResponse<IResult, IError>>, IResult, IError>
+public sealed class GetVideoQueryHandler: IQueryHandler<IQuery<IQueryResponse<IResult, IError>>, IResult, IError>
 {
-    public async Task<IQueryResponse<IResult, IError>> ReceiveAsync(IQuery<IQueryResponse<IResult, IError>> query,
-        CancellationToken cancellationToken)
+    public async Task<IQueryResponse<IResult, IError>> ReceiveAsync(IQuery<IQueryResponse<IResult, IError>> query, CancellationToken cancellationToken)
     {
         try
         {
-            if (query is not FetchFormatsQuery fetchFormatsQuery)
+            if (query is not GetVideoQuery getVideoQuery)
                 throw new ArgumentException($"Incorrect argument: {nameof(query)}");
+            ArgumentNullException.ThrowIfNull(getVideoQuery.VideoService);
 
-            ArgumentNullException.ThrowIfNull(fetchFormatsQuery.VideoService);
-
-            var result =
-                await fetchFormatsQuery.VideoService.VideoDownloader.FetchFormats(fetchFormatsQuery, cancellationToken);
-            return new FetchFormatsResponse
-            {
-                Result = result
-            };
+            throw new NotImplementedException();
         }
         catch (HttpRequestException requestException)
         {

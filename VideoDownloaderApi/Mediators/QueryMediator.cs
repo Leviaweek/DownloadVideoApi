@@ -5,7 +5,7 @@ using VideoDownloaderApi.Models.Queries;
 namespace VideoDownloaderApi.Mediators;
 
 public sealed class QueryMediator(
-    IEnumerable<IVideoDownload> videoDownloadServices,
+    IEnumerable<IVideoService> videoDownloadServices,
     IEnumerable<IQueryHandler<IQuery<IQueryResponse<IResult, IError>>, IResult, IError>> queryHandlers)
     : IQueryMediator<IQuery<IQueryResponse<IResult, IError>>, IResult, IError>
 {
@@ -17,11 +17,12 @@ public sealed class QueryMediator(
             case FetchFormatsQuery fetchFormatsQuery:
             {
                 var videoDownloader =
-                    videoDownloadServices.FirstOrDefault(x => x.IsMatch(fetchFormatsQuery.Link));
+                    videoDownloadServices.FirstOrDefault(x => x.VideoDownloader.IsMatch(fetchFormatsQuery.Link));
                 var queryHandler = queryHandlers.OfType<FetchFormatsQueryHandler>().FirstOrDefault();
                 if (queryHandler is null)
                     throw new InvalidOperationException();
-                return await queryHandler.ReceiveAsync(fetchFormatsQuery, videoDownloader, cancellationToken);
+                fetchFormatsQuery.VideoService = videoDownloader;
+                return await queryHandler.ReceiveAsync(fetchFormatsQuery, cancellationToken);
             }
             default: throw new InvalidOperationException();
         }

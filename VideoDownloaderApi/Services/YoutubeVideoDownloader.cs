@@ -1,7 +1,9 @@
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Options;
 using VideoDownloaderApi.Abstractions;
+using VideoDownloaderApi.Enums;
 using VideoDownloaderApi.Models.Queries;
+using VideoDownloaderApi.Models.Responses;
 using YoutubeExplode;
 
 namespace VideoDownloaderApi.Services;
@@ -9,7 +11,7 @@ namespace VideoDownloaderApi.Services;
 public sealed partial class YoutubeVideoDownloader(
     ILogger<YoutubeVideoDownloader> logger,
     HttpClient httpClient,
-    IOptions<VideoDownloaderOptions> options) : IVideoDownload
+    IOptions<VideoDownloaderOptions> options) : IVideoDownloader
 {
     public Regex Pattern { get; } = YoutubePattern();
     private readonly string _filesPath = options.Value.CachePath;
@@ -47,12 +49,12 @@ public sealed partial class YoutubeVideoDownloader(
         var videoStreamInfo = streamInfoSet.GetMuxedStreams()
             .Where(x => x.Container.Name == Constants.VideoContainerName).ToArray();
         var fileMetadatas = videoStreamInfo.Select(x =>
-                new FileMetadata(Constants.MetadatasVideoType,
+                new FileMetadata(MediaType.Video,
                     AudioInfo: new AudioInfo(x.AudioCodec, x.Container.Name, x.Bitrate.BitsPerSecond),
                     VideoInfo: new VideoInfo(x.VideoQuality.Label, x.Container.Name, x.VideoQuality.MaxHeight)))
             .ToList();
         if (audioStreamInfo is not null)
-            fileMetadatas.Add(new FileMetadata(Constants.MetadatasAudioType,
+            fileMetadatas.Add(new FileMetadata(MediaType.Audio,
                 AudioInfo: new AudioInfo(audioStreamInfo.AudioCodec, audioStreamInfo.Container.Name,
                     audioStreamInfo.Bitrate.KiloBitsPerSecond)));
         return new VideoResponseResult
