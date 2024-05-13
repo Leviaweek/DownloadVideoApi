@@ -1,19 +1,17 @@
 using VideoDownloaderApi.Abstractions;
+using VideoDownloaderApi.Abstractions.Query;
 using VideoDownloaderApi.Models.Queries;
 using VideoDownloaderApi.Models.Responses;
 
 namespace VideoDownloaderApi.Handlers.QueryHandlers;
 
-public sealed class GetVideoQueryHandler: IQueryHandler<IQuery<IQueryResponse<IResult, IError>>, IResult, IError>
+public sealed class GetVideoQueryHandler: IQueryHandler<GetYoutubeVideoQuery>
 {
-    public async Task<IQueryResponse<IResult, IError>> ReceiveAsync(IQuery<IQueryResponse<IResult, IError>> query, CancellationToken cancellationToken)
+    public async Task<IResponse<IResult, IError>> HandleAsync(GetYoutubeVideoQuery query, CancellationToken cancellationToken)
     {
         try
         {
-            if (query is not GetVideoQuery getVideoQuery)
-                throw new ArgumentException($"Incorrect argument: {nameof(query)}");
-            ArgumentNullException.ThrowIfNull(getVideoQuery.VideoService);
-
+            await Task.Yield();
             throw new NotImplementedException();
         }
         catch (HttpRequestException requestException)

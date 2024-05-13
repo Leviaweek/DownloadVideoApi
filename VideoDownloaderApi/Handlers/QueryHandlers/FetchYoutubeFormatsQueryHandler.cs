@@ -1,24 +1,20 @@
 using VideoDownloaderApi.Abstractions;
+using VideoDownloaderApi.Abstractions.Query;
 using VideoDownloaderApi.Models.Queries;
 using VideoDownloaderApi.Models.Responses;
+using VideoDownloaderApi.Services;
+using YoutubeExplode.Exceptions;
 
 namespace VideoDownloaderApi.Handlers.QueryHandlers;
 
-public sealed class FetchFormatsQueryHandler
-    : IQueryHandler<IQuery<IQueryResponse<IResult, IError>>, IResult, IError>
+public sealed class FetchYoutubeFormatsQueryHandler(YoutubeVideoDownloader youtubeVideoDownloader): IFetchFormatsQueryHandler
 {
-    public async Task<IQueryResponse<IResult, IError>> ReceiveAsync(IQuery<IQueryResponse<IResult, IError>> query,
-        CancellationToken cancellationToken)
+    public async Task<IResponse<IResult, IError>> HandleAsync(FetchFormatsQuery query, CancellationToken cancellationToken = default)
     {
         try
         {
-            if (query is not FetchFormatsQuery fetchFormatsQuery)
-                throw new ArgumentException($"Incorrect argument: {nameof(query)}");
-
-            ArgumentNullException.ThrowIfNull(fetchFormatsQuery.VideoService);
-
             var result =
-                await fetchFormatsQuery.VideoService.VideoDownloader.FetchFormats(fetchFormatsQuery, cancellationToken);
+                await youtubeVideoDownloader.FetchFormats(query.Link, cancellationToken);
             return new FetchFormatsResponse
             {
                 Result = result
@@ -31,6 +27,13 @@ public sealed class FetchFormatsQueryHandler
                 Error = new VideoResponseError(requestException.Message)
             };
         }
+        catch (YoutubeExplodeException youtubeExplodeException)
+        {
+            return new FetchFormatsResponse
+            {
+                Error = new VideoResponseError(youtubeExplodeException.Message)
+            };
+        }
         catch (ArgumentException argumentException)
         {
             return new FetchFormatsResponse
@@ -39,4 +42,6 @@ public sealed class FetchFormatsQueryHandler
             };
         }
     }
+
+    public bool IsMatch(string link) => RegexPatterns.YoutubePattern().IsMatch(link);
 }

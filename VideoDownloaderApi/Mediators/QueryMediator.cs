@@ -1,30 +1,23 @@
 using VideoDownloaderApi.Abstractions;
+using VideoDownloaderApi.Abstractions.Query;
+using VideoDownloaderApi.Handlers.CommandHandlers;
 using VideoDownloaderApi.Handlers.QueryHandlers;
 using VideoDownloaderApi.Models.Queries;
 
 namespace VideoDownloaderApi.Mediators;
 
-public sealed class QueryMediator(
-    IEnumerable<IVideoService> videoDownloadServices,
-    IEnumerable<IQueryHandler<IQuery<IQueryResponse<IResult, IError>>, IResult, IError>> queryHandlers)
-    : IQueryMediator<IQuery<IQueryResponse<IResult, IError>>, IResult, IError>
+public sealed class QueryMediator(IEnumerable<IFetchFormatsQueryHandler> fetchFormatsQueryHandlers)
+    : IQueryMediator<IQuery<IResponse<IResult, IError>>>
 {
-    public async Task<IQueryResponse<IResult, IError>> HandleAsync(IQuery<IQueryResponse<IResult, IError>> query,
+    public async Task<IResponse<IResult, IError>> HandleAsync(IQuery<IResponse<IResult, IError>> query,
         CancellationToken cancellationToken = default)
     {
-        switch (query)
+        return query switch
         {
-            case FetchFormatsQuery fetchFormatsQuery:
-            {
-                var videoDownloader =
-                    videoDownloadServices.FirstOrDefault(x => x.VideoDownloader.IsMatch(fetchFormatsQuery.Link));
-                var queryHandler = queryHandlers.OfType<FetchFormatsQueryHandler>().FirstOrDefault();
-                if (queryHandler is null)
-                    throw new InvalidOperationException();
-                fetchFormatsQuery.VideoService = videoDownloader;
-                return await queryHandler.ReceiveAsync(fetchFormatsQuery, cancellationToken);
-            }
-            default: throw new InvalidOperationException();
-        }
+            FetchFormatsQuery fetchYoutubeQuery =>
+                await fetchFormatsQueryHandlers.First(x => x.IsMatch(fetchYoutubeQuery.Link))
+                    .HandleAsync(fetchYoutubeQuery, cancellationToken),
+            _ => throw new InvalidOperationException()
+        };
     }
 }

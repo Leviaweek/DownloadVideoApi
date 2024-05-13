@@ -2,6 +2,6 @@ namespace VideoDownloaderApi.Enums;
 
 public enum MediaType
 {
-    Video,
+    MuxedVideo,
     Audio
 }

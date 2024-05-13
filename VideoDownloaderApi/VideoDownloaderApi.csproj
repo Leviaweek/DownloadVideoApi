@@ -8,13 +8,17 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.4"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.4">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.2" />
         <PackageReference Include="YoutubeExplode" Version="6.3.13" />
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Handlers\CommandHandlers\" />
-      <Folder Include="Models\Commands\" />
+      <Folder Include="Handlers\RequestHandlers\" />
+      <Folder Include="Models\Requests\" />
     </ItemGroup>
 
 </Project>

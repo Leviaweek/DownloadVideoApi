@@ -1,3 +1,3 @@
 namespace VideoDownloaderApi.Abstractions;
 
-public interface IBaseCommand;
+public interface IResponse<TResult, TError>;

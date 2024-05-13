@@ -6,10 +6,9 @@ namespace VideoDownloaderApi.Abstractions;
 
 public interface IVideoDownloader
 {
-    public Regex Pattern { get; }
     public bool IsMatch(string link);
-    public Task DownloadAsync(GetVideoQuery getVideoQuery, CancellationToken cancellationToken);
+    public Task DownloadVideoAsync(string link, int quality, CancellationToken cancellationToken);
 
-    public Task<VideoResponseResult> FetchFormats(FetchFormatsQuery fetchFormatsQuery,
+    public Task<VideoResponseResult> FetchFormats(string link,
         CancellationToken cancellationToken);
 }
