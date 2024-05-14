@@ -1,3 +1,5 @@
+using VideoDownloaderApi.Models.Responses;
+
 namespace VideoDownloaderApi.Abstractions.Query;
 
 //<IQuery<IQueryResponse<IResult, IError>>, IQueryResponse<IResult, IError>>

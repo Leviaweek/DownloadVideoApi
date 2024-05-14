@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using VideoDownloaderApi.Abstractions;
 using VideoDownloaderApi.Abstractions.Command;
@@ -13,7 +12,8 @@ namespace VideoDownloaderApi.Handlers.CommandHandlers;
 
 public sealed class DownloadYoutubeMediaCommandHandler(
     IDbContextFactory<MediaDbContext> dbContextFactory,
-    YoutubeVideoDownloader youtubeVideoDownloader): IDownloadMediaCommandHandler
+    YoutubeVideoDownloader youtubeVideoDownloader,
+    DownloadMediaQueue downloadMediaQueue): IDownloadMediaCommandHandler
 {
     public async Task<IResponse<IResult, IError>> HandleAsync(DownloadMediaCommand downloadCommand,
         CancellationToken cancellationToken)
@@ -61,7 +61,7 @@ public sealed class DownloadYoutubeMediaCommandHandler(
 
         var physicalYoutubeMedia =
             await db.PhysicalYoutubeMedia.OrderBy(x => x.CreatedAt).FirstOrDefaultAsync(
-                x => x.Id == youtubeVideo.Id && x.Quality == downloadCommand.Quality,
+                x => x.YoutubeVideoId == youtubeVideo.Id && x.Quality == downloadCommand.Quality,
                 cancellationToken: cancellationToken);
         var media = metadata.FileMetadatas.FirstOrDefault(x =>
         {
@@ -77,36 +77,38 @@ public sealed class DownloadYoutubeMediaCommandHandler(
 
         if (physicalYoutubeMedia is null)
         {
-            AddPhysicalYoutubeMedia();
+            var taskId = AddPhysicalYoutubeMedia();
             await db.SaveChangesAsync(cancellationToken);
             return new DownloadMediaResponse
             {
-                Result = new DownloadVideoResult(Constants.OkResponseMessage)
+                Result = new DownloadVideoResult(Constants.OkResponseMessage, taskId.ToString("N"))
             };
         }
 
         if (physicalYoutubeMedia.Size != media.Size)
         {
-            AddPhysicalYoutubeMedia();
+            var taskId = AddPhysicalYoutubeMedia();
+            physicalYoutubeMedia.IsDeleted = true;
+            await db.SaveChangesAsync(cancellationToken);
+            return new DownloadMediaResponse
+            {
+                Result = new DownloadVideoResult(Constants.OkResponseMessage, taskId.ToString("N"))
+            };
         }
-        await db.SaveChangesAsync(cancellationToken);
         return new DownloadMediaResponse
         {
             Result = new DownloadVideoResult(Constants.OkResponseMessage)
         };
 
-        void AddPhysicalYoutubeMedia()
+        Guid AddPhysicalYoutubeMedia()
         {
             switch (downloadCommand.Type)
             {
                 case MediaType.MuxedVideo:
+                {
                     ArgumentNullException.ThrowIfNull(downloadCommand.Quality);
                     ArgumentNullException.ThrowIfNull(media.VideoInfo);
                     ArgumentNullException.ThrowIfNull(media.AudioInfo);
-                    /*await youtubeVideoDownloader.DownloadVideoAsync(downloadRequest.Link, downloadRequest.Quality.Value,
-                        cancellationToken);
-                        ToDo add download video task
-                        */
                     db.PhysicalYoutubeMedia.Add(new PhysicalYoutubeMedia
                     {
                         Type = downloadCommand.Type,
@@ -120,15 +122,12 @@ public sealed class DownloadYoutubeMediaCommandHandler(
                         Bitrate = media.AudioInfo.Bitrate
                     });
                     break;
+                }
 
                 case MediaType.Audio:
                 {
                     ArgumentNullException.ThrowIfNull(downloadCommand.Bitrate);
                     ArgumentNullException.ThrowIfNull(media.AudioInfo);
-                    /*await youtubeVideoDownloader.DownloadAudioAsync(downloadRequest.Link, downloadRequest.Bitrate.Value,
-                        cancellationToken);
-                        ToDo add download audio task
-                        */
                     db.PhysicalYoutubeMedia.Add(new PhysicalYoutubeMedia
                     {
                         Type = downloadCommand.Type,
@@ -145,8 +144,14 @@ public sealed class DownloadYoutubeMediaCommandHandler(
                 }
                 default: throw new InvalidOperationException();
             }
+
+            return downloadMediaQueue.AddTask(downloadCommand.Type,
+                YoutubeVideoDownloader.CurrentMediaPlatform,
+                downloadCommand.Link,
+                id,
+                downloadCommand.Quality,
+                downloadCommand.Bitrate);
         }
     }
-
     public bool IsMatch(string link) => RegexPatterns.YoutubePattern().IsMatch(link);
 }

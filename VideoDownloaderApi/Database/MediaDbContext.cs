@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 using VideoDownloaderApi.Database.Models;
 using VideoDownloaderApi.Enums;
 

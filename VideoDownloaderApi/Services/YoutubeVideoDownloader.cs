@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using Microsoft.Extensions.Options;
 using VideoDownloaderApi.Enums;
 using VideoDownloaderApi.Models.Responses;
@@ -6,13 +5,14 @@ using YoutubeExplode;
 
 namespace VideoDownloaderApi.Services;
 
-public sealed partial class YoutubeVideoDownloader(
+public sealed class YoutubeVideoDownloader(
     ILogger<YoutubeVideoDownloader> logger,
     HttpClient httpClient,
     IOptions<VideoDownloaderOptions> options)
 {
     private readonly string _filesPath = options.Value.CachePath;
     private const string FileNameFormat = "{0}-{1}.{2}";
+    public const MediaPlatform CurrentMediaPlatform = MediaPlatform.Youtube;
 
     public async Task DownloadVideoAsync(string link, int quality, CancellationToken cancellationToken = default)
     {

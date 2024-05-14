@@ -1,16 +1,12 @@
+using System.Threading.Channels;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 using VideoDownloaderApi.Abstractions;
 using VideoDownloaderApi.Abstractions.Command;
 using VideoDownloaderApi.Abstractions.Query;
 using VideoDownloaderApi.Database;
-using VideoDownloaderApi.Database.Models;
-using VideoDownloaderApi.Enums;
 using VideoDownloaderApi.Handlers.CommandHandlers;
 using VideoDownloaderApi.Handlers.QueryHandlers;
 using VideoDownloaderApi.Mediators;
-using VideoDownloaderApi.Models.Commands;
-using VideoDownloaderApi.Models.Queries;
 using VideoDownloaderApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -38,6 +34,14 @@ builder.Services.AddSingleton<ICommandMediator<ICommand<IResponse<IResult, IErro
 builder.Services.AddTransient<YoutubeVideoDownloader>();
 builder.Services.AddTransient<IFetchFormatsQueryHandler, FetchYoutubeFormatsQueryHandler>();
 builder.Services.AddTransient<IDownloadMediaCommandHandler, DownloadYoutubeMediaCommandHandler>();
+builder.Services.AddHostedService<DownloadMediaQueueService>();
+builder.Services.AddHostedService<DownloadMediaCleaner>();
+builder.Services.AddSingleton<DownloadMediaQueue>();
+builder.Services.AddSingleton(
+    Channel.CreateBounded<DownloadTask>(new BoundedChannelOptions(10) {SingleWriter = true, SingleReader = true}));
+builder.Services.AddSingleton(svc => svc.GetRequiredService<Channel<DownloadTask>>().Reader);
+builder.Services.AddSingleton(svc => svc.GetRequiredService<Channel<DownloadTask>>().Writer);
+
 
 var app = builder.Build();
 app.UseRouting();

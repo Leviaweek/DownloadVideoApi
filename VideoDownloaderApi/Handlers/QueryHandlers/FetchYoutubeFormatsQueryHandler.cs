@@ -9,7 +9,7 @@ namespace VideoDownloaderApi.Handlers.QueryHandlers;
 
 public sealed class FetchYoutubeFormatsQueryHandler(YoutubeVideoDownloader youtubeVideoDownloader): IFetchFormatsQueryHandler
 {
-    public async Task<IResponse<IResult, IError>> HandleAsync(FetchFormatsQuery query, CancellationToken cancellationToken = default)
+    public async Task<IResponse<IResult, IError>> HandleAsync(FetchFormatsQuery query, CancellationToken cancellationToken)
     {
         try
         {
