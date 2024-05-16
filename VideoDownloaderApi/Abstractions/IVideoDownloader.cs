@@ -7,6 +7,6 @@ public interface IVideoDownloader
     public bool IsMatch(string link);
     public Task DownloadVideoAsync(string link, int quality, CancellationToken cancellationToken);
 
-    public Task<VideoResponseResult> FetchFormats(string link,
+    public Task<FetchFormatsResponseResult> FetchFormats(string link,
         CancellationToken cancellationToken);
 }

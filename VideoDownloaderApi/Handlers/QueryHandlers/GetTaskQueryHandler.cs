@@ -12,14 +12,9 @@ public class GetTaskQueryHandler(DownloadMediaQueue downloadMediaQueue): IQueryH
     {
         await Task.Yield();
         var task = downloadMediaQueue.GetTaskById(query.Guid);
-        if (task is null)
-            return new GetTaskResponse
-            {
-                Error = new GetTaskError("Undefined task")
-            };
-        return new GetTaskResponse()
-        {
-            Result = new GetTaskResult(Constants.OkResponseMessage, task.DownloadState)
-        };
+        return task is null
+            ? new GetTaskResponse(new GetTaskError("Undefined task"))
+            : new GetTaskResponse(new GetTaskResult(Constants.OkResponseMessage,
+                task.DownloadState));
     }
 }

@@ -13,6 +13,7 @@ public sealed class YoutubeVideoDownloader(
     private readonly string _filesPath = options.Value.CachePath;
     private const string FileNameFormat = "{0}-{1}.{2}";
     public const MediaPlatform CurrentMediaPlatform = MediaPlatform.Youtube;
+    public const string DirectoryName = "YoutubeMedia";
 
     public async Task DownloadVideoAsync(string link, int quality, CancellationToken cancellationToken = default)
     {
@@ -27,10 +28,19 @@ public sealed class YoutubeVideoDownloader(
         logger.LogInformation("Downloading video {id}:{label}.{container}", media.Id, streamInfo.VideoQuality.Label,
             streamInfo.Container.Name);
         await client.Videos.Streams.DownloadAsync(streamInfo,
-            Path.Combine(_filesPath,
-                string.Format(FileNameFormat, media.Id, streamInfo.VideoQuality.Label, streamInfo.Container.Name)),
+                    CalculateFilePath(media.Id,
+                    streamInfo.Container.Name,
+                    streamInfo.VideoQuality.MaxHeight) ,
             cancellationToken: cancellationToken);
     }
+
+    public string CalculateFilePath(string id,
+        string containerName,
+        long? bitrate = null,
+        int? quality = null) =>
+        Path.Combine(_filesPath,
+            DirectoryName,
+        string.Format(FileNameFormat, id, quality ?? bitrate, containerName));
 
     public async Task DownloadAudioAsync(string link, long bitrate, CancellationToken cancellationToken = default)
     {
@@ -42,12 +52,13 @@ public sealed class YoutubeVideoDownloader(
         if (streamInfo is null)
             throw new ArgumentException("Incorrect argument", nameof(bitrate));
         await client.Videos.Streams.DownloadAsync(streamInfo,
-            Path.Combine(_filesPath,
-                string.Format(FileNameFormat, media.Id, streamInfo.Bitrate.BitsPerSecond, streamInfo.Container.Name)),
+            CalculateFilePath(media.Id,
+                streamInfo.Container.Name,
+                streamInfo.Bitrate.BitsPerSecond),
             cancellationToken: cancellationToken);
     }
 
-    public async Task<VideoResponseResult> FetchFormats(string link,
+    public async Task<FetchFormatsResponseResult> FetchFormats(string link,
         CancellationToken cancellationToken)
     {
         var client = new YoutubeClient(httpClient);
@@ -60,15 +71,16 @@ public sealed class YoutubeVideoDownloader(
             .Where(x => x.Container.Name == Constants.VideoContainerName).ToArray();
         var fileMetadatas = videoStreamInfo.Select(x =>
                 new FileMetadata(MediaType.MuxedVideo,
-                    AudioInfo: new AudioInfo(Constants.AudioLabel, x.Container.Name, x.Bitrate.BitsPerSecond),
+                    AudioInfo: new AudioInfo(Constants.AudioContainerName, x.Container.Name, x.Bitrate.BitsPerSecond),
                     VideoInfo: new VideoInfo(x.VideoQuality.Label, x.Container.Name, x.VideoQuality.MaxHeight), Size: x.Size.Bytes))
             .ToList();
         if (audioStreamInfo is not null)
             fileMetadatas.Add(new FileMetadata(MediaType.Audio,
-                AudioInfo: new AudioInfo(Constants.AudioLabel, audioStreamInfo.Container.Name,
+                AudioInfo: new AudioInfo(Constants.AudioContainerName, audioStreamInfo.Container.Name,
                     audioStreamInfo.Bitrate.BitsPerSecond), Size: audioStreamInfo.Size.Bytes));
-        return new VideoResponseResult
+        return new FetchFormatsResponseResult
         {
+            Message = Constants.OkResponseMessage,
             FileMetadatas = fileMetadatas,
             VideoId = video.Id
         };

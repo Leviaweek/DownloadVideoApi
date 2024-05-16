@@ -1,5 +1,3 @@
-using VideoDownloaderApi.Models.Responses;
-
 namespace VideoDownloaderApi.Abstractions.Command;
 public interface ICommandHandler<in TCommand>
     where TCommand : ICommand<IResponse<IResult, IError>>

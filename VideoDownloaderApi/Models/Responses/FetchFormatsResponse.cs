@@ -1,16 +1,33 @@
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Mvc;
 using VideoDownloaderApi.Abstractions;
 
 namespace VideoDownloaderApi.Models.Responses;
 
 [Serializable]
-public sealed record FetchFormatsResponse: IResponse<IResult, IError>
+public sealed record FetchFormatsResponse : IResponse<IResult, IError>
 {
+    public FetchFormatsResponse(FetchFormatsResponseResult result) : this(true)
+    {
+        Result = result;
+    }
+    public FetchFormatsResponse(FetchFormatsResponseError error): this(false)
+    {
+        Error = error;
+    }
+    private FetchFormatsResponse(bool isSuccess)
+    {
+        IsSuccess = isSuccess;
+    }
     [JsonPropertyName("Result")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public VideoResponseResult? Result { get; set; }
+    public FetchFormatsResponseResult? Result { get; }
     
     [JsonPropertyName("Error")] 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public VideoResponseError? Error { get; set; }
+    public FetchFormatsResponseError? Error { get; }
+
+    public bool IsSuccess { get; }
+    public bool IsFailure => !IsSuccess;
+    public JsonResult AsJsonResult() => new(this);
 }

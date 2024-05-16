@@ -25,10 +25,7 @@ public sealed class DownloadYoutubeMediaCommandHandler(
         
         if (youtubeVideoLink is not null && youtubeVideoLink.YoutubeVideo is null)
         {
-            return new DownloadMediaResponse
-            {
-                Error = new DownloadVideoError(Constants.UndefinedErrorMessage)
-            };
+            return new DownloadMediaResponse(new DownloadMediaError(Constants.UndefinedErrorMessage));
         }
         
         var metadata = await youtubeVideoDownloader.FetchFormats(downloadCommand.Link, cancellationToken);
@@ -79,10 +76,7 @@ public sealed class DownloadYoutubeMediaCommandHandler(
         {
             var taskId = AddPhysicalYoutubeMedia();
             await db.SaveChangesAsync(cancellationToken);
-            return new DownloadMediaResponse
-            {
-                Result = new DownloadVideoResult(Constants.OkResponseMessage, taskId.ToString("N"))
-            };
+            return new DownloadMediaResponse(new DownloadMediaResult(Constants.OkResponseMessage, taskId.ToString("N")));
         }
 
         if (physicalYoutubeMedia.Size != media.Size)
@@ -90,15 +84,10 @@ public sealed class DownloadYoutubeMediaCommandHandler(
             var taskId = AddPhysicalYoutubeMedia();
             physicalYoutubeMedia.IsDeleted = true;
             await db.SaveChangesAsync(cancellationToken);
-            return new DownloadMediaResponse
-            {
-                Result = new DownloadVideoResult(Constants.OkResponseMessage, taskId.ToString("N"))
-            };
+            return new DownloadMediaResponse(new DownloadMediaResult(Constants.OkResponseMessage, taskId.ToString("N")));
         }
-        return new DownloadMediaResponse
-        {
-            Result = new DownloadVideoResult(Constants.OkResponseMessage)
-        };
+
+        return new DownloadMediaResponse(new DownloadMediaResult(Constants.OkResponseMessage));
 
         Guid AddPhysicalYoutubeMedia()
         {

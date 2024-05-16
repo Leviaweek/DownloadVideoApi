@@ -4,7 +4,7 @@ using VideoDownloaderApi.Abstractions.Command;
 using VideoDownloaderApi.Abstractions.Query;
 using VideoDownloaderApi.Models.Commands;
 using VideoDownloaderApi.Models.Queries;
-using VideoDownloaderApi.Services;
+using VideoDownloaderApi.Models.Responses;
 
 namespace VideoDownloaderApi.Controllers;
 
@@ -12,19 +12,31 @@ namespace VideoDownloaderApi.Controllers;
 [Route("/api/video")]
 public sealed class VideoController(
     IQueryMediator<IQuery<IResponse<IResult, IError>>> queryMediator,
-    ICommandMediator<ICommand<IResponse<IResult, IError>>> commandMediator,
-    DownloadMediaQueue downloadMediaQueue)
+    ICommandMediator<ICommand<IResponse<IResult, IError>>> commandMediator)
 {
     [HttpGet("fetchFormats")]
-    public async Task<IResponse<IResult, IError>> FetchFormatsAsync([FromBody] FetchFormatsQuery fetchFormatsQuery,
-        CancellationToken cancellationToken = default) => await queryMediator.HandleAsync(fetchFormatsQuery, cancellationToken);
+    public async Task<IActionResult> FetchFormatsAsync([FromBody] FetchFormatsQuery fetchFormatsQuery,
+        CancellationToken cancellationToken = default) => (await queryMediator.HandleAsync(fetchFormatsQuery, cancellationToken)).AsJsonResult();
 
     [HttpPost("download")]
-    public async Task<IResponse<IResult, IError>> DownloadVideoAsync(
+    public async Task<IActionResult> DownloadVideoAsync(
         [FromBody] DownloadMediaCommand downloadMediaCommand, CancellationToken cancellationToken = default) =>
-        await commandMediator.HandleAsync(downloadMediaCommand, cancellationToken);
+        (await commandMediator.HandleAsync(downloadMediaCommand, cancellationToken)).AsJsonResult();
 
     [HttpGet("task")]
-    public async Task<IResponse<IResult, IError>> GetTaskAsync([FromBody] GetTaskQuery getTaskQuery) =>
-        await queryMediator.HandleAsync(getTaskQuery);
+    public async Task<IActionResult> GetTaskAsync([FromBody] GetTaskQuery getTaskQuery,
+        CancellationToken cancellationToken = default) =>
+        (await queryMediator.HandleAsync(getTaskQuery, cancellationToken)).AsJsonResult();
+
+    [HttpGet("media")]
+    public async Task<IActionResult> GetMediaAsync([FromBody] GetMediaQuery getMediaQuery,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await queryMediator.HandleAsync(getMediaQuery, cancellationToken);
+        if (response is not GetMediaResponse getMediaResponse) throw new InvalidOperationException();
+
+        if (getMediaResponse.IsFailure) return getMediaResponse.AsJsonResult();
+        
+        return getMediaResponse.AsPhysicalFileResult();
+    }
 }

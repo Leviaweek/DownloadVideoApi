@@ -15,31 +15,19 @@ public sealed class FetchYoutubeFormatsQueryHandler(YoutubeVideoDownloader youtu
         {
             var result =
                 await youtubeVideoDownloader.FetchFormats(query.Link, cancellationToken);
-            return new FetchFormatsResponse
-            {
-                Result = result
-            };
+            return new FetchFormatsResponse(result);
         }
         catch (HttpRequestException requestException)
         {
-            return new FetchFormatsResponse
-            {
-                Error = new VideoResponseError(requestException.Message)
-            };
+            return new FetchFormatsResponse(new FetchFormatsResponseError(requestException.Message));
         }
         catch (YoutubeExplodeException youtubeExplodeException)
         {
-            return new FetchFormatsResponse
-            {
-                Error = new VideoResponseError(youtubeExplodeException.Message)
-            };
+            return new FetchFormatsResponse(new FetchFormatsResponseError(youtubeExplodeException.Message));
         }
         catch (ArgumentException argumentException)
         {
-            return new FetchFormatsResponse
-            {
-                Error = new VideoResponseError(argumentException.Message)
-            };
+            return new FetchFormatsResponse(new FetchFormatsResponseError(argumentException.Message));
         }
     }
 

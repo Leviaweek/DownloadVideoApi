@@ -1,5 +1,3 @@
-using VideoDownloaderApi.Models.Responses;
-
 namespace VideoDownloaderApi.Abstractions.Query;
 
 public interface IQueryHandler<in TQuery>

@@ -1,3 +1,3 @@
 namespace VideoDownloaderApi.Abstractions.Query;
 
-public interface IQuery<TResponse>;
+public interface IQuery<out TResponse>;
