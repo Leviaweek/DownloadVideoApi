@@ -16,26 +16,24 @@ public sealed class GetMediaYoutubeQueryHandler(
     {
         await using var context = await factory.CreateDbContextAsync(cancellationToken);
         var physicalFile = await context.PhysicalYoutubeMedia.FirstOrDefaultAsync(
-            x => x.YoutubeVideo!.InternalVideoId == query.Id,
+            x => x.YoutubeVideo!.InternalVideoId == query.Id &&
+                 x.Quality == query.Quality &&
+                 x.Bitrate == query.Bitrate &&
+                 x.Type == query.Type,
             cancellationToken: cancellationToken);
         if (physicalFile is null)
-            return new GetMediaResponse(new GetMediaError("Media not in database"));
-        if (physicalFile.Quality != query.Quality ||
-            physicalFile.Bitrate != query.Bitrate ||
-            physicalFile.Type != query.Type)
-            return new GetMediaResponse(new GetMediaError("This media not added"));
+            GetMediaResponse.NotInDatabase();
         var (containerName, contentType) = query.Type switch
         {
             MediaType.MuxedVideo => (Constants.VideoContainerName, Constants.VideoContentType),
             MediaType.Audio => (Constants.AudioContainerName, Constants.AudioContentType),
             _ => throw new InvalidOperationException()
         };
-        return new GetMediaResponse(new GetMediaResult(Constants.OkResponseMessage,
-            downloader.CalculateFilePath(query.Id,
+        return GetMediaResponse.Success(downloader.CalculateFilePath(query.Id,
                 containerName,
                 query.Bitrate,
                 query.Quality),
-            contentType));
+            contentType);
     }
     
     public bool IsMatch(MediaPlatform mediaPlatform) => mediaPlatform is MediaPlatform.Youtube;

@@ -6,11 +6,11 @@ namespace VideoDownloaderApi.Models.Responses;
 [Serializable]
 public sealed record FetchFormatsResponse : IResponse<IResult, IError>
 {
-    public FetchFormatsResponse(FetchFormatsResponseResult result) : this(true)
+    private FetchFormatsResponse(FetchFormatsResponseResult result) : this(true)
     {
         Result = result;
     }
-    public FetchFormatsResponse(FetchFormatsResponseError error): this(false)
+    private FetchFormatsResponse(FetchFormatsResponseError error): this(false)
     {
         Error = error;
     }
@@ -27,4 +27,14 @@ public sealed record FetchFormatsResponse : IResponse<IResult, IError>
     public FetchFormatsResponseError? Error { get; }
 
     public bool IsSuccess { get; }
+
+    public static FetchFormatsResponse ExceptionError(string message)
+    {
+        return new FetchFormatsResponse(new FetchFormatsResponseError(message));
+    }
+
+    public static FetchFormatsResponse Success(FetchFormatsResponseResult result)
+    {
+        return new FetchFormatsResponse(result);
+    }
 }

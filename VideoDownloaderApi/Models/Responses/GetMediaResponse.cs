@@ -8,12 +8,12 @@ public sealed class GetMediaResponse : IResponse<IResult, IError>
     public GetMediaResult? Result { get; }
     public GetMediaError? Error { get; }
 
-    public GetMediaResponse(GetMediaResult result) : this(true)
+    private GetMediaResponse(GetMediaResult result) : this(true)
     {
         Result = result;
     }
 
-    public GetMediaResponse(GetMediaError error) : this(false)
+    private GetMediaResponse(GetMediaError error) : this(false)
     {
         Error = error;
     }
@@ -21,6 +21,16 @@ public sealed class GetMediaResponse : IResponse<IResult, IError>
     private GetMediaResponse(bool isSuccess)
     {
         IsSuccess = isSuccess;
+    }
+
+    public static GetMediaResponse NotInDatabase()
+    {
+        return new GetMediaResponse(new GetMediaError("Media not in database"));
+    }
+
+    public static GetMediaResponse Success(string filePath, string contentType)
+    {
+        return new GetMediaResponse(new GetMediaResult(Constants.OkResponseMessage, filePath, contentType));
     }
 
     public bool IsSuccess { get; }

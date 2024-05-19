@@ -12,8 +12,7 @@ public sealed class GetTaskQueryHandler(DownloadMediaQueue downloadMediaQueue): 
         await Task.Yield();
         var task = downloadMediaQueue.GetTaskById(query.Guid);
         return task is null
-            ? new GetTaskResponse(new GetTaskError("Undefined task"))
-            : new GetTaskResponse(new GetTaskResult(Constants.OkResponseMessage,
-                task.DownloadState));
+            ? GetTaskResponse.TaskNotFound()
+            : GetTaskResponse.Success(task.DownloadState);
     }
 }
