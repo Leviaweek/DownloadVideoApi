@@ -1,8 +1,13 @@
-using VideoDownloaderApi.Abstractions;
 using VideoDownloaderApi.Abstractions.Query;
 using VideoDownloaderApi.Enums;
+using VideoDownloaderApi.Models.Responses;
 
 namespace VideoDownloaderApi.Models.Queries;
 
 [Serializable]
-public record GetMediaQuery(string Id, MediaPlatform Platform, MediaType Type, int? Quality, long? Bitrate): IQuery<IResponse<IResult, IError>>;
+public sealed record GetMediaQuery(
+    string Id,
+    MediaPlatform Platform,
+    MediaType Type,
+    int? Quality,
+    long? Bitrate) : IQuery<GetMediaResponse>;

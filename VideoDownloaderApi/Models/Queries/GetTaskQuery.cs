@@ -1,6 +1,7 @@
-using VideoDownloaderApi.Abstractions;
 using VideoDownloaderApi.Abstractions.Query;
+using VideoDownloaderApi.Models.Responses;
 
 namespace VideoDownloaderApi.Models.Queries;
 
-public record GetTaskQuery(Guid Guid): IQuery<IResponse<IResult, IError>>;
+[Serializable]
+public sealed record GetTaskQuery(Guid Guid): IQuery<GetTaskResponse>;

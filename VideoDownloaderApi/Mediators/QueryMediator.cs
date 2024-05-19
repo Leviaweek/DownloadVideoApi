@@ -9,12 +9,12 @@ public sealed class QueryMediator(
     IEnumerable<IFetchFormatsQueryHandler> fetchFormatsQueryHandlers,
     IEnumerable<IGetMediaQueryHandler> getMediaQueryHandlers,
     GetTaskQueryHandler getTaskQueryHandler)
-    : IQueryMediator<IQuery<IResponse<IResult, IError>>>
+    : IQueryMediator
 {
-    public async Task<IResponse<IResult, IError>> HandleAsync(IQuery<IResponse<IResult, IError>> query,
-        CancellationToken cancellationToken = default)
+    public async Task<TResponse> HandleAsync<TResponse>(IQuery<TResponse> query,
+        CancellationToken cancellationToken = default) where TResponse: IResponse<IResult, IError>
     {
-        return query switch
+        IResponse<IResult, IError> response = query switch
         {
             FetchFormatsQuery fetchYoutubeQuery =>
                 await fetchFormatsQueryHandlers.First(x => x.IsMatch(fetchYoutubeQuery.Link))
@@ -25,5 +25,6 @@ public sealed class QueryMediator(
                     cancellationToken),
             _ => throw new InvalidOperationException()
         };
+        return (TResponse)response;
     }
 }

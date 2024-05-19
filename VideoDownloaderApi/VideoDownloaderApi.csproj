@@ -17,7 +17,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Handlers\RequestHandlers\" />
       <Folder Include="Models\Requests\" />
     </ItemGroup>
 

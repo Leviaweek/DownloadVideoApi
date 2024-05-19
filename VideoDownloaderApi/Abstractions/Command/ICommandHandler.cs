@@ -1,6 +1,6 @@
 namespace VideoDownloaderApi.Abstractions.Command;
-public interface ICommandHandler<in TCommand>
-    where TCommand : ICommand<IResponse<IResult, IError>>
+public interface ICommandHandler<in TCommand, TResponse>
+    where TCommand : ICommand<TResponse>
 {
-    public Task<IResponse<IResult, IError>> HandleAsync(TCommand command, CancellationToken cancellationToken = default);
+    public Task<TResponse> HandleAsync(TCommand command, CancellationToken cancellationToken = default);
 }

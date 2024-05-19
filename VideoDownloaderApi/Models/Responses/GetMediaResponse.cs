@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Mvc;
 using VideoDownloaderApi.Abstractions;
 using VideoDownloaderApi.Enums;
 
@@ -25,29 +24,4 @@ public sealed class GetMediaResponse : IResponse<IResult, IError>
     }
 
     public bool IsSuccess { get; }
-    public bool IsFailure => !IsSuccess;
-    public JsonResult AsJsonResult() => new(this);
-
-    public PhysicalFileResult AsPhysicalFileResult()
-    {
-        if (IsFailure)
-            throw new InvalidCastException();
-        
-        ArgumentNullException.ThrowIfNull(Result);
-        
-        var contentType = Result.Type switch
-        {
-            MediaType.MuxedVideo => "video/mp4",
-            MediaType.Audio => "audio/mp4",
-            _ => throw new InvalidOperationException()
-        };
-        return new PhysicalFileResult(Result.FilePath, contentType);
-    }
-
 }
-
-[Serializable]
-public sealed record GetMediaResult(string Message, string FilePath, MediaType Type) : IResult;
-
-[Serializable]
-public sealed record GetMediaError(string Message): IError;

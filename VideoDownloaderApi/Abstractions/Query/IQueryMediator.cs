@@ -1,8 +1,8 @@
 namespace VideoDownloaderApi.Abstractions.Query;
 
 //<IQuery<IQueryResponse<IResult, IError>>, IQueryResponse<IResult, IError>>
-public interface IQueryMediator<in TQuery> : IBaseMediator
-    where TQuery: IQuery<IResponse<IResult, IError>>
+public interface IQueryMediator : IBaseMediator
 {
-    public Task<IResponse<IResult, IError>> HandleAsync(TQuery query, CancellationToken cancellationToken = default);
+    public Task<TResponse> HandleAsync<TResponse>(IQuery<TResponse> query,
+        CancellationToken cancellationToken = default) where TResponse : IResponse<IResult, IError>;
 }

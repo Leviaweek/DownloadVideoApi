@@ -1,4 +1,4 @@
-namespace VideoDownloaderApi.Models;
+namespace VideoDownloaderApi.Enums;
 
 public enum MediaPlatform
 {

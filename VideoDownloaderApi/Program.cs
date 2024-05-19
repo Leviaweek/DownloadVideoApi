@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using VideoDownloaderApi.Abstractions;
 using VideoDownloaderApi.Abstractions.Command;
 using VideoDownloaderApi.Abstractions.Query;
 using VideoDownloaderApi.Database;
@@ -28,8 +27,8 @@ builder.Services.AddDbContextFactory<MediaDbContext>(optionsBuilder =>
     optionsBuilder.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddOptions<VideoDownloaderOptions>()
     .Bind(builder.Configuration.GetSection(VideoDownloaderOptions.OptionName)).ValidateOnStart();
-builder.Services.AddSingleton<IQueryMediator<IQuery<IResponse<IResult, IError>>>, QueryMediator>();
-builder.Services.AddSingleton<ICommandMediator<ICommand<IResponse<IResult, IError>>>, CommandMediator>();
+builder.Services.AddSingleton<IQueryMediator, QueryMediator>();
+builder.Services.AddSingleton<ICommandMediator, CommandMediator>();
 builder.Services.AddTransient<YoutubeVideoDownloader>();
 builder.Services.AddTransient<IFetchFormatsQueryHandler, FetchYoutubeFormatsQueryHandler>();
 builder.Services.AddTransient<IDownloadMediaCommandHandler, DownloadYoutubeMediaCommandHandler>();

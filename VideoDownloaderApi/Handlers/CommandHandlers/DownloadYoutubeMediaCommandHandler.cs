@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using VideoDownloaderApi.Abstractions;
 using VideoDownloaderApi.Abstractions.Command;
 using VideoDownloaderApi.Database;
 using VideoDownloaderApi.Database.Models;
@@ -15,7 +14,7 @@ public sealed class DownloadYoutubeMediaCommandHandler(
     YoutubeVideoDownloader youtubeVideoDownloader,
     DownloadMediaQueue downloadMediaQueue): IDownloadMediaCommandHandler
 {
-    public async Task<IResponse<IResult, IError>> HandleAsync(DownloadMediaCommand downloadCommand,
+    public async Task<DownloadMediaResponse> HandleAsync(DownloadMediaCommand downloadCommand,
         CancellationToken cancellationToken)
     {
         await using var db = await dbContextFactory.CreateDbContextAsync(cancellationToken);
@@ -74,73 +73,76 @@ public sealed class DownloadYoutubeMediaCommandHandler(
 
         if (physicalYoutubeMedia is null)
         {
-            var taskId = AddPhysicalYoutubeMedia();
+            var taskId = AddTask(downloadCommand, media, db, youtubeVideo, id);;
             await db.SaveChangesAsync(cancellationToken);
             return new DownloadMediaResponse(new DownloadMediaResult(Constants.OkResponseMessage, taskId.ToString("N")));
         }
 
         if (physicalYoutubeMedia.Size != media.Size)
         {
-            var taskId = AddPhysicalYoutubeMedia();
+            var taskId = AddTask(downloadCommand, media, db, youtubeVideo, id);;
             physicalYoutubeMedia.IsDeleted = true;
             await db.SaveChangesAsync(cancellationToken);
             return new DownloadMediaResponse(new DownloadMediaResult(Constants.OkResponseMessage, taskId.ToString("N")));
         }
 
         return new DownloadMediaResponse(new DownloadMediaResult(Constants.OkResponseMessage));
+        
+    }
 
-        Guid AddPhysicalYoutubeMedia()
+    private Guid AddTask(DownloadMediaCommand downloadCommand, FileMetadata? media, MediaDbContext db,
+        YoutubeVideo youtubeVideo, string id)
+    {
+        switch (downloadCommand.Type)
         {
-            switch (downloadCommand.Type)
+            case MediaType.MuxedVideo:
             {
-                case MediaType.MuxedVideo:
+                ArgumentNullException.ThrowIfNull(downloadCommand.Quality);
+                ArgumentNullException.ThrowIfNull(media?.VideoInfo);
+                ArgumentNullException.ThrowIfNull(media.AudioInfo);
+                db.PhysicalYoutubeMedia.Add(new PhysicalYoutubeMedia
                 {
-                    ArgumentNullException.ThrowIfNull(downloadCommand.Quality);
-                    ArgumentNullException.ThrowIfNull(media.VideoInfo);
-                    ArgumentNullException.ThrowIfNull(media.AudioInfo);
-                    db.PhysicalYoutubeMedia.Add(new PhysicalYoutubeMedia
-                    {
-                        Type = downloadCommand.Type,
-                        Quality = downloadCommand.Quality.Value,
-                        YoutubeVideoId = youtubeVideo.Id,
-                        Format = media.VideoInfo.Format,
-                        CreatedAt = DateTimeOffset.UtcNow,
-                        IsDeleted = false,
-                        IsDownloaded = false,
-                        Size = media.Size,
-                        Bitrate = media.AudioInfo.Bitrate
-                    });
-                    break;
-                }
-
-                case MediaType.Audio:
-                {
-                    ArgumentNullException.ThrowIfNull(downloadCommand.Bitrate);
-                    ArgumentNullException.ThrowIfNull(media.AudioInfo);
-                    db.PhysicalYoutubeMedia.Add(new PhysicalYoutubeMedia
-                    {
-                        Type = downloadCommand.Type,
-                        Quality = null,
-                        YoutubeVideoId = youtubeVideo.Id,
-                        Format = media.AudioInfo.Format,
-                        CreatedAt = DateTimeOffset.UtcNow,
-                        IsDeleted = false,
-                        IsDownloaded = false,
-                        Size = media.Size,
-                        Bitrate = downloadCommand.Bitrate.Value
-                    });
-                    break;
-                }
-                default: throw new InvalidOperationException();
+                    Type = downloadCommand.Type,
+                    Quality = downloadCommand.Quality.Value,
+                    YoutubeVideoId = youtubeVideo.Id,
+                    Format = media.VideoInfo.Format,
+                    CreatedAt = DateTimeOffset.UtcNow,
+                    IsDeleted = false,
+                    IsDownloaded = false,
+                    Size = media.Size,
+                    Bitrate = media.AudioInfo.Bitrate
+                });
+                break;
             }
 
-            return downloadMediaQueue.AddTask(downloadCommand.Type,
-                YoutubeVideoDownloader.CurrentMediaPlatform,
-                downloadCommand.Link,
-                id,
-                downloadCommand.Quality,
-                downloadCommand.Bitrate);
+            case MediaType.Audio:
+            {
+                ArgumentNullException.ThrowIfNull(downloadCommand.Bitrate);
+                ArgumentNullException.ThrowIfNull(media?.AudioInfo);
+                db.PhysicalYoutubeMedia.Add(new PhysicalYoutubeMedia
+                {
+                    Type = downloadCommand.Type,
+                    Quality = null,
+                    YoutubeVideoId = youtubeVideo.Id,
+                    Format = media.AudioInfo.Format,
+                    CreatedAt = DateTimeOffset.UtcNow,
+                    IsDeleted = false,
+                    IsDownloaded = false,
+                    Size = media.Size,
+                    Bitrate = downloadCommand.Bitrate.Value
+                });
+                break;
+            }
+            default: throw new InvalidOperationException();
         }
+
+        return downloadMediaQueue.AddTask(downloadCommand.Type,
+            YoutubeVideoDownloader.CurrentMediaPlatform,
+            downloadCommand.Link,
+            id,
+            downloadCommand.Quality,
+            downloadCommand.Bitrate);
     }
+
     public bool IsMatch(string link) => RegexPatterns.YoutubePattern().IsMatch(link);
 }

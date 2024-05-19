@@ -6,11 +6,12 @@ namespace VideoDownloaderApi.Mediators;
 
 public sealed class CommandMediator(
     IEnumerable<IDownloadMediaCommandHandler> downloadMediaCommandHandlers)
-    : ICommandMediator<ICommand<IResponse<IResult, IError>>>
+    : ICommandMediator
 {
-    public async Task<IResponse<IResult, IError>> HandleAsync(ICommand<IResponse<IResult, IError>> command, CancellationToken cancellationToken = default)
+    public async Task<TResponse> HandleAsync<TResponse>(ICommand<TResponse> command,
+        CancellationToken cancellationToken = default) where TResponse : IResponse<IResult, IError>
     {
-        return command switch
+        IResponse<IResult, IError> response = command switch
         {
             DownloadMediaCommand downloadMediaCommand when RegexPatterns.YoutubePattern()
                 .IsMatch(downloadMediaCommand.Link) => 
@@ -18,5 +19,6 @@ public sealed class CommandMediator(
                     .HandleAsync(downloadMediaCommand, cancellationToken),
             _ => throw new InvalidOperationException()
         };
+        return (TResponse)response;
     }
 }

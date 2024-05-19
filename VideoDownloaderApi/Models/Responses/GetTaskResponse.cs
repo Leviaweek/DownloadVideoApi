@@ -1,8 +1,8 @@
-using Microsoft.AspNetCore.Mvc;
 using VideoDownloaderApi.Abstractions;
 
 namespace VideoDownloaderApi.Models.Responses;
 
+[Serializable]
 public sealed record GetTaskResponse: IResponse<IResult, IError>
 {
     public GetTaskResponse(GetTaskResult getTaskResult) : this(true)
@@ -21,6 +21,4 @@ public sealed record GetTaskResponse: IResponse<IResult, IError>
     public GetTaskResult? Result { get; }
     public GetTaskError? Error { get; }
     public bool IsSuccess { get; }
-    public bool IsFailure => !IsSuccess;
-    public JsonResult AsJsonResult() => new(this);
 }

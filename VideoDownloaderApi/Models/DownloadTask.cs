@@ -2,7 +2,7 @@ using VideoDownloaderApi.Enums;
 
 namespace VideoDownloaderApi.Models;
 
-public record DownloadTask(
+public sealed record DownloadTask(
     MediaType MediaType,
     MediaPlatform MediaPlatform,
     string Link,

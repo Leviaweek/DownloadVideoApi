@@ -1,5 +1,4 @@
 using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Mvc;
 using VideoDownloaderApi.Abstractions;
 
 namespace VideoDownloaderApi.Models.Responses;
@@ -28,6 +27,4 @@ public sealed record FetchFormatsResponse : IResponse<IResult, IError>
     public FetchFormatsResponseError? Error { get; }
 
     public bool IsSuccess { get; }
-    public bool IsFailure => !IsSuccess;
-    public JsonResult AsJsonResult() => new(this);
 }

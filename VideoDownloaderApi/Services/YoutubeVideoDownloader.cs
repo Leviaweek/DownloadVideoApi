@@ -13,7 +13,7 @@ public sealed class YoutubeVideoDownloader(
     private readonly string _filesPath = options.Value.CachePath;
     private const string FileNameFormat = "{0}-{1}.{2}";
     public const MediaPlatform CurrentMediaPlatform = MediaPlatform.Youtube;
-    public const string DirectoryName = "YoutubeMedia";
+    private const string DirectoryName = "YoutubeMedia";
 
     public async Task DownloadVideoAsync(string link, int quality, CancellationToken cancellationToken = default)
     {

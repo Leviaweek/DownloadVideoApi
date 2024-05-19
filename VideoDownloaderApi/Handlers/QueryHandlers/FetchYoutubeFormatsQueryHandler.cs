@@ -1,4 +1,3 @@
-using VideoDownloaderApi.Abstractions;
 using VideoDownloaderApi.Abstractions.Query;
 using VideoDownloaderApi.Models.Queries;
 using VideoDownloaderApi.Models.Responses;
@@ -9,12 +8,11 @@ namespace VideoDownloaderApi.Handlers.QueryHandlers;
 
 public sealed class FetchYoutubeFormatsQueryHandler(YoutubeVideoDownloader youtubeVideoDownloader): IFetchFormatsQueryHandler
 {
-    public async Task<IResponse<IResult, IError>> HandleAsync(FetchFormatsQuery query, CancellationToken cancellationToken)
+    public async Task<FetchFormatsResponse> HandleAsync(FetchFormatsQuery query, CancellationToken cancellationToken)
     {
         try
         {
-            var result =
-                await youtubeVideoDownloader.FetchFormats(query.Link, cancellationToken);
+            var result = await youtubeVideoDownloader.FetchFormats(query.Link, cancellationToken);
             return new FetchFormatsResponse(result);
         }
         catch (HttpRequestException requestException)

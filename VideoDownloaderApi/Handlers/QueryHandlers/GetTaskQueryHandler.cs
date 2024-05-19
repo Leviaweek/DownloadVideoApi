@@ -1,4 +1,3 @@
-using VideoDownloaderApi.Abstractions;
 using VideoDownloaderApi.Abstractions.Query;
 using VideoDownloaderApi.Models.Queries;
 using VideoDownloaderApi.Models.Responses;
@@ -6,9 +5,9 @@ using VideoDownloaderApi.Services;
 
 namespace VideoDownloaderApi.Handlers.QueryHandlers;
 
-public class GetTaskQueryHandler(DownloadMediaQueue downloadMediaQueue): IQueryHandler<GetTaskQuery>
+public sealed class GetTaskQueryHandler(DownloadMediaQueue downloadMediaQueue): IQueryHandler<GetTaskQuery, GetTaskResponse>
 {
-    public async Task<IResponse<IResult, IError>> HandleAsync(GetTaskQuery query, CancellationToken cancellationToken)
+    public async Task<GetTaskResponse> HandleAsync(GetTaskQuery query, CancellationToken cancellationToken)
     {
         await Task.Yield();
         var task = downloadMediaQueue.GetTaskById(query.Guid);

@@ -1,5 +1,4 @@
 using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Mvc;
 using VideoDownloaderApi.Abstractions;
 
 namespace VideoDownloaderApi.Models.Responses;
@@ -29,6 +28,4 @@ public sealed record DownloadMediaResponse: IResponse<IResult, IError>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public DownloadMediaError? Error { get; }
     public bool IsSuccess { get; }
-    public bool IsFailure => !IsSuccess;
-    public JsonResult AsJsonResult() => new(this);
 }
